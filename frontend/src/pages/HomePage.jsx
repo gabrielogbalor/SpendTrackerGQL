@@ -8,24 +8,61 @@ import { MdLogout } from "react-icons/md";
 import toast from "react-hot-toast";
 import { useMutation, useQuery } from "@apollo/client";
 import { LOGOUT } from "../graphql/mutations/user.mutation";
+import { GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const HomePage = () => {
+	const { data: statsData, loading: statsLoading } = useQuery(GET_TRANSACTION_STATISTICS, {
+		fetchPolicy: "cache-and-network", // This ensures we get fresh data but still show cached data first
+	});
+
+	// Create chart data from the statistics
 	const chartData = {
 		labels: ["Saving", "Expense", "Investment"],
 		datasets: [
 			{
-				label: "%",
-				data: [13, 8, 3],
-				backgroundColor: ["rgba(75, 192, 192)", "rgba(255, 99, 132)", "rgba(54, 162, 235)"],
-				borderColor: ["rgba(75, 192, 192)", "rgba(255, 99, 132)", "rgba(54, 162, 235, 1)"],
+				label: "Amount ($)",
+				data: statsLoading ? [0, 0, 0] : [
+					statsData?.categoryStatistics.find(s => s.category === "saving")?.totalAmount || 0,
+					statsData?.categoryStatistics.find(s => s.category === "expense")?.totalAmount || 0,
+					statsData?.categoryStatistics.find(s => s.category === "investment")?.totalAmount || 0
+				],
+				backgroundColor: ["rgba(75, 192, 192, 0.8)", "rgba(255, 99, 132, 0.8)", "rgba(54, 162, 235, 0.8)"],
+				borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)"],
 				borderWidth: 1,
-				borderRadius: 0,
+				borderRadius: 8,
 				spacing: 10,
 				cutout: 130,
 			},
 		],
+	};
+
+	// Chart options for better tooltips and appearance
+	const chartOptions = {
+		plugins: {
+			tooltip: {
+				callbacks: {
+					label: function(context) {
+						const label = context.dataset.label || '';
+						const value = context.parsed || 0;
+						const total = context.dataset.data.reduce((a, b) => a + b, 0);
+						const percentage = total > 0 ? Math.round((value * 100) / total) : 0;
+						return `${label}: $${value} (${percentage}%)`;
+					}
+				}
+			},
+			legend: {
+				position: 'bottom',
+				labels: {
+					color: 'white',
+					padding: 20,
+					font: {
+						size: 14
+					}
+				}
+			}
+		}
 	};
 
 	const [logout, { loading }] = useMutation(LOGOUT, {
@@ -35,14 +72,11 @@ const HomePage = () => {
 	const handleLogout = async () => {
 		try {
 			await logout();
-			// Clear the Apollo Client cache FROM THE DOCS
-			// https://www.apollographql.com/docs/react/caching/advanced-topics/#:~:text=Resetting%20the%20cache,any%20of%20your%20active%20queries
 		} catch (error) {
 			console.error("Error logging out:", error);
 			toast.error(error.message);
 		}
 	};
-
 
 	return (
 		<>
@@ -61,8 +95,15 @@ const HomePage = () => {
 					{loading && <div className='w-6 h-6 border-t-2 border-b-2 mx-2 rounded-full animate-spin'></div>}
 				</div>
 				<div className='flex flex-wrap w-full justify-center items-center gap-6'>
-					<div className='h-[330px] w-[330px] md:h-[360px] md:w-[360px]  '>
-						<Doughnut data={chartData} />
+					<div className='h-[330px] w-[330px] md:h-[360px] md:w-[360px]'>
+						{statsLoading && (
+							<div className="h-full w-full flex items-center justify-center">
+								<div className="w-12 h-12 border-4 border-t-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+							</div>
+						)}
+						{!statsLoading && (
+							<Doughnut data={chartData} options={chartOptions} />
+						)}
 					</div>
 
 					<TransactionForm />

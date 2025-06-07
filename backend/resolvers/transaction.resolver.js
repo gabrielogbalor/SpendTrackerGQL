@@ -24,7 +24,33 @@ const transactionResolver = {
 				throw new Error("Error getting transaction");
 			}
 		},
-        // TODO ADD USER/TRANSACTION RELATION
+        categoryStatistics: async (_, __, context) => {
+            try {
+                if (!context.getUser()) throw new Error("Unauthorized");
+                const userId = await context.getUser()._id;
+
+                // Get all transactions for the user
+                const transactions = await Transaction.find({ userId });
+
+                // Group transactions by category and calculate total amount
+                const stats = {};
+                
+                // Initialize with all categories, even if they have 0 transactions
+                stats["saving"] = { category: "saving", totalAmount: 0 };
+                stats["expense"] = { category: "expense", totalAmount: 0 };
+                stats["investment"] = { category: "investment", totalAmount: 0 };
+
+                // Add up transaction amounts by category
+                transactions.forEach(transaction => {
+                    stats[transaction.category].totalAmount += transaction.amount;
+                });
+
+                return Object.values(stats);
+            } catch (err) {
+                console.error("Error getting category statistics:", err);
+                throw new Error("Error getting category statistics");
+            }
+        }
     },
     Mutation: {
         createTransaction: async (_, { input }, context) => {

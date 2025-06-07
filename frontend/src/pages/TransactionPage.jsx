@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQuery } from "@apollo/client";
+import { GET_TRANSACTION, GET_TRANSACTIONS, GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query";
+import { UPDATE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
 import TransactionFormSkeleton from "../components/skeletons/TransactionFormSkeleton";
+import toast from "react-hot-toast";
 
 const TransactionPage = () => {
+	const { id } = useParams();
+	const navigate = useNavigate();
 	const [formData, setFormData] = useState({
 		description: "",
 		paymentType: "",
@@ -11,10 +18,61 @@ const TransactionPage = () => {
 		date: "",
 	});
 
+	const { data, loading: queryLoading, error: queryError } = useQuery(GET_TRANSACTION, {
+		variables: { id },
+		onCompleted: (data) => {
+			if (data?.transaction) {
+				// Format date for input field (YYYY-MM-DD)
+				const date = new Date(data.transaction.date);
+				const formattedDate = date.toISOString().split('T')[0];
+				
+				setFormData({
+					description: data.transaction.description,
+					paymentType: data.transaction.paymentType,
+					category: data.transaction.category,
+					amount: data.transaction.amount,
+					location: data.transaction.location || "",
+					date: formattedDate,
+				});
+			}
+		}
+	});
+
+	const [updateTransaction, { loading: mutationLoading }] = useMutation(UPDATE_TRANSACTION, {
+		refetchQueries: [
+			{ query: GET_TRANSACTIONS },
+			{ query: GET_TRANSACTION_STATISTICS }
+		],
+		onCompleted: () => {
+			toast.success("Transaction updated successfully");
+			navigate("/");
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		}
+	});
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		console.log("formData", formData);
+		try {
+			await updateTransaction({
+				variables: {
+					input: {
+						transactionId: id,
+						description: formData.description,
+						paymentType: formData.paymentType,
+						category: formData.category,
+						amount: parseFloat(formData.amount),
+						location: formData.location,
+						date: formData.date,
+					}
+				}
+			});
+		} catch (error) {
+			// Error is handled in onError callback
+		}
 	};
+
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
 		setFormData((prevFormData) => ({
@@ -23,7 +81,13 @@ const TransactionPage = () => {
 		}));
 	};
 
-	//if (loading) return <TransactionFormSkeleton />;
+	if (queryLoading) return <TransactionFormSkeleton />;
+	
+	if (queryError) return (
+		<div className="h-screen flex justify-center items-center">
+			<p className="text-2xl font-bold text-red-500">Error loading transaction: {queryError.message}</p>
+		</div>
+	);
 
 	return (
 		<div className='h-screen max-w-4xl mx-auto flex flex-col items-center'>
@@ -48,6 +112,7 @@ const TransactionPage = () => {
 							placeholder='Rent, Groceries, Salary, etc.'
 							value={formData.description}
 							onChange={handleInputChange}
+							required
 						/>
 					</div>
 				</div>
@@ -66,7 +131,8 @@ const TransactionPage = () => {
 								id='paymentType'
 								name='paymentType'
 								onChange={handleInputChange}
-								defaultValue={formData.paymentType}
+								value={formData.paymentType}
+								required
 							>
 								<option value={"card"}>Card</option>
 								<option value={"cash"}>Cash</option>
@@ -97,7 +163,8 @@ const TransactionPage = () => {
 								id='category'
 								name='category'
 								onChange={handleInputChange}
-								defaultValue={formData.category}
+								value={formData.category}
+								required
 							>
 								<option value={"saving"}>Saving</option>
 								<option value={"expense"}>Expense</option>
@@ -128,6 +195,7 @@ const TransactionPage = () => {
 							placeholder='150'
 							value={formData.amount}
 							onChange={handleInputChange}
+							required
 						/>
 					</div>
 				</div>
@@ -142,7 +210,7 @@ const TransactionPage = () => {
 							Location
 						</label>
 						<input
-							className='appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white'
+							className='appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white'
 							id='location'
 							name='location'
 							type='text'
@@ -164,21 +232,23 @@ const TransactionPage = () => {
 							type='date'
 							name='date'
 							id='date'
-							className='appearance-none block w-full bg-gray-200 text-gray-700 border  rounded py-[11px] px-4 mb-3 leading-tight focus:outline-none
-						 focus:bg-white'
+							className='appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-[11px] px-4 mb-3 leading-tight focus:outline-none focus:bg-white'
 							placeholder='Select date'
 							value={formData.date}
 							onChange={handleInputChange}
+							required
 						/>
 					</div>
 				</div>
 				{/* SUBMIT BUTTON */}
 				<button
 					className='text-white font-bold w-full rounded px-4 py-2 bg-gradient-to-br
-          from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600'
+          from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600
+          disabled:opacity-70 disabled:cursor-not-allowed'
 					type='submit'
+					disabled={mutationLoading}
 				>
-					Update Transaction
+					{mutationLoading ? "Updating..." : "Update Transaction"}
 				</button>
 			</form>
 		</div>
