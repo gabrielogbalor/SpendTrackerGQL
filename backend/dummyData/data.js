@@ -1,4 +1,5 @@
 // Hardcoded array of 5 users
+//This is for testing purposes only
 const users = [
 	{
 		_id: "1",
