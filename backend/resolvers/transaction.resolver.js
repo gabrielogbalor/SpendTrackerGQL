@@ -39,9 +39,9 @@ const transactionResolver = {
                 const stats = {};
                 
                 // Initialize with all categories, even if they have 0 transactions
-                stats["saving"] = { category: "saving", totalAmount: 0 };
-                stats["expense"] = { category: "expense", totalAmount: 0 };
-                stats["investment"] = { category: "investment", totalAmount: 0 };
+                stats["Food"] = { category: "Food", totalAmount: 0 };
+                stats["Entertainment"] = { category: "Entertainment", totalAmount: 0 };
+                stats["Utilities"] = { category: "Utilities", totalAmount: 0 };
 
                 // Add up transaction amounts by category
                 transactions.forEach(transaction => {
@@ -58,22 +58,26 @@ const transactionResolver = {
     Mutation: {
         createTransaction: async (_, { input }, context) => {
 			try {
-				// TEMPORARILY COMMENTED OUT FOR TESTING
-				// const newTransaction = new Transaction({
-				// 	...input,
-				// 	userId: context.getUser()._id,
-				// });
-
+				console.log("Received input:", input);
+				
 				// For testing, use a dummy userId or make it optional
 				const newTransaction = new Transaction({
 					...input,
 					userId: "507f1f77bcf86cd799439011", // dummy ObjectId for testing
 				});
+				
+				console.log("About to save transaction:", newTransaction);
 				await newTransaction.save();
+				console.log("Transaction saved successfully:", newTransaction);
 				return newTransaction;
 			} catch (err) {
-				console.error("Error creating transaction:", err);
-				throw new Error("Error creating transaction");
+				console.error("Detailed error creating transaction:", err);
+				console.error("Error name:", err.name);
+				console.error("Error message:", err.message);
+				if (err.errors) {
+					console.error("Validation errors:", err.errors);
+				}
+				throw new Error(`Error creating transaction: ${err.message}`);
 			}
 		},
 		updateTransaction: async (_, { input }) => {
