@@ -12,7 +12,7 @@ const transactionSchema = new mongoose.Schema({
     },
     paymentType: {
         type: String,
-        enum: ["cash", "card"],
+        enum: ["Cash", "Card"],
         required: true,
     },
     category: {

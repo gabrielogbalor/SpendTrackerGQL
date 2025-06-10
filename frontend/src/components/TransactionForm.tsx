@@ -127,8 +127,8 @@ const TransactionForm = () => {
           required
         >
           <option value="">Payment Type *</option>
-          <option value="cash">Cash</option>
-          <option value="card">Card</option>
+          <option value="Cash">Cash</option>
+          <option value="Card">Card</option>
         </select>
         
         <input 
