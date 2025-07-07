@@ -1,4 +1,13 @@
+import { useQuery } from "@apollo/client";
+import { GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query";
+import CategoryPieChart from '../components/PieChart';
+
 const Dashboard = () => {
+  const { data, loading, error } = useQuery(GET_TRANSACTION_STATISTICS);
+  
+  if (loading) return <p className="p-6 text-gray-600">Loading dashboard...</p>;
+  if (error) return <p className="p-6 text-red-600">Error: {error.message}</p>;
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -29,35 +38,27 @@ const Dashboard = () => {
         <p className="text-sm mt-2 text-right text-gray-500">64% spent</p>
       </div>
 
-      {/* Recent Transactions Table (Placeholder) */}
+      {/* Pie Chart */}
+      {data?.categoryStatistics && data.categoryStatistics.length > 0 && (
+        <CategoryPieChart data={data.categoryStatistics} />
+      )}
+      
+      {/* Spending Breakdown (Live Backend Data) */}
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
-        <table className="w-full text-left">
-          <thead>
-            <tr className="text-sm text-gray-600 border-b">
-              <th className="pb-2">Date</th>
-              <th className="pb-2">Category</th>
-              <th className="pb-2">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td className="py-2">June 1</td>
-              <td>Food</td>
-              <td className="text-red-600">- $45.00</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-2">June 3</td>
-              <td>Entertainment</td>
-              <td className="text-red-600">- $25.00</td>
-            </tr>
-            <tr>
-              <td className="py-2">June 5</td>
-              <td>Transport</td>
-              <td className="text-red-600">- $15.00</td>
-            </tr>
-          </tbody>
-        </table>
+        <h2 className="text-xl font-semibold mb-4">Spending Breakdown</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {data?.categoryStatistics.map((stat: any) => (
+            <div
+              key={stat.category}
+              className="border border-gray-200 p-4 rounded-lg shadow-sm bg-gray-50"
+            >
+              <p className="text-sm text-gray-500">{stat.category}</p>
+              <p className="text-xl font-bold text-gray-800">
+                ${stat.totalAmount.toFixed(2)}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

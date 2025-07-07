@@ -28,27 +28,26 @@ const transactionResolver = {
 		},
         categoryStatistics: async (_, __, context) => {
             try {
-                // TEMPORARILY COMMENTED OUT FOR TESTING
-                // if (!context.getUser()) throw new Error("Unauthorized");
-                // const userId = await context.getUser()._id;
-
-                // Get all transactions (for testing)
-                const transactions = await Transaction.find({});
-
-                // Group transactions by category and calculate total amount
-                const stats = {};
-                
-                // Initialize with all categories, even if they have 0 transactions
-                stats["Food"] = { category: "Food", totalAmount: 0 };
-                stats["Entertainment"] = { category: "Entertainment", totalAmount: 0 };
-                stats["Utilities"] = { category: "Utilities", totalAmount: 0 };
-
-                // Add up transaction amounts by category
-                transactions.forEach(transaction => {
-                    stats[transaction.category].totalAmount += transaction.amount;
-                });
-
-                return Object.values(stats);
+                // 🔒 If not using auth yet, just fetch all
+    // Replace with your dummy userId if needed
+    const stats = await Transaction.aggregate([
+		// { $match: { user: "YOUR_USER_ID" } }, // ← add this when user is active
+		{
+		  $group: {
+			_id: "$category",
+			totalAmount: { $sum: "$amount" },
+		  },
+		},
+		{
+		  $project: {
+			category: "$_id",
+			totalAmount: 1,
+			_id: 0,
+		  },
+		},
+	  ]);
+  
+	  return stats;
             } catch (err) {
                 console.error("Error getting category statistics:", err);
                 throw new Error("Error getting category statistics");
