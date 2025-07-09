@@ -1,6 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { useState } from "react";
-import { GET_TRANSACTIONS } from "../graphql/queries/transaction.query";
+import { GET_TRANSACTIONS } from "../graphql/queries/transaction.query.ts";
 import TransactionTable from "../components/TransactionTable";
 import TransactionForm from "../components/TransactionForm";
 
@@ -32,9 +32,10 @@ const Transactions = () => {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold text-gray-800">Transactions</h1>
+        <TransactionForm />
         <div className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-8 rounded text-center">
           <p className="text-lg font-medium">No transactions found</p>
-          <p className="text-sm">Create your first transaction to see it here!</p>
+          <p className="text-sm">Create your first transaction above to see it here!</p>
         </div>
       </div>
     );
@@ -46,9 +47,16 @@ const Transactions = () => {
   );
   
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-    const aValue = sortKey === 'amount' ? a.amount : new Date(a.date).getTime();
-    const bValue = sortKey === 'amount' ? b.amount : new Date(b.date).getTime();
-    return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    if (sortKey === 'amount') {
+      const aValue = a.amount;
+      const bValue = b.amount;
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    } else {
+      // Sort by date - convert to Date objects for proper sorting
+      const aDate = new Date(a.date).getTime();
+      const bDate = new Date(b.date).getTime();
+      return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+    }
   });
 
   return (

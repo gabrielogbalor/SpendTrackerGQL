@@ -1,5 +1,6 @@
 // src/components/TransactionTable.tsx
 import React from 'react';
+import { formatDisplayDate } from '../utils/dateUtils';
 
 interface Transaction {
   _id: string;
@@ -31,7 +32,7 @@ const TransactionTable: React.FC<Props> = ({ transactions }) => {
       <tbody>
         {transactions.map((tx) => (
           <tr key={tx._id} className="border-b hover:bg-gray-50">
-            <td className="p-4">{tx.date}</td>
+            <td className="p-4">{formatDisplayDate(tx.date)}</td>
             <td className="p-4">{tx.category}</td>
             <td className={`p-4 ${tx.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
               ${Math.abs(tx.amount)}

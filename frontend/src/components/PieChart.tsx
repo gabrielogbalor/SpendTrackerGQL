@@ -22,57 +22,52 @@ import {
     const total = data.reduce((sum, d) => sum + d.totalAmount, 0);
   
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          Spending by Category
-        </h2>
-        <div className="h-[380px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="totalAmount"
-                nameKey="category"
-                cx="50%"
-                cy="45%"
-                innerRadius="60%"
-                outerRadius="80%"
-                paddingAngle={3}
-              >
-                {data.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number, name: string) => [
-                  `$${value.toLocaleString()}`,
-                  name,
-                ]}
-              />
-              <Legend
-                layout="horizontal"
-                verticalAlign="bottom"
-                align="center"
-                iconType="square"
-                wrapperStyle={{ fontSize: '14px', marginTop: '12px' }}
-              />
-              {/* Center total label */}
-              <text
-                x="50%"
-                y="45%"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  fill: '#111827',
-                }}
-              >
-                ${total.toLocaleString()}
-              </text>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="h-[380px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="totalAmount"
+              nameKey="category"
+              cx="50%"
+              cy="45%"
+              innerRadius="60%"
+              outerRadius="80%"
+              paddingAngle={3}
+            >
+              {data.map((_, index) => (
+                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value: number, name: string) => [
+                `$${value.toLocaleString()}`,
+                name,
+              ]}
+            />
+            <Legend
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+              iconType="square"
+              wrapperStyle={{ fontSize: '14px', marginTop: '12px' }}
+            />
+            {/* Center total label */}
+            <text
+              x="50%"
+              y="45%"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                fill: '#111827',
+              }}
+            >
+              ${total.toLocaleString()}
+            </text>
+          </PieChart>
+        </ResponsiveContainer>
       </div>
     );
   };

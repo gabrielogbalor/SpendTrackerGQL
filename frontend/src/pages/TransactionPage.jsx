@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@apollo/client";
-import { GET_TRANSACTION, GET_TRANSACTIONS, GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query";
-import { UPDATE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
+import { GET_TRANSACTION, GET_TRANSACTIONS, GET_TRANSACTION_STATISTICS } from "../graphql/queries/transaction.query.ts";
+import { UPDATE_TRANSACTION } from "../graphql/mutations/transaction.mutation.ts";
+import { formatInputDate, formatGraphQLDate } from "../utils/dateUtils";
 import TransactionFormSkeleton from "../components/skeletons/TransactionFormSkeleton";
 import toast from "react-hot-toast";
 
@@ -22,9 +23,8 @@ const TransactionPage = () => {
 		variables: { id },
 		onCompleted: (data) => {
 			if (data?.transaction) {
-				// Format date for input field (YYYY-MM-DD)
-				const date = new Date(data.transaction.date);
-				const formattedDate = date.toISOString().split('T')[0];
+				// Use formatInputDate utility for consistent date formatting
+				const formattedDate = formatInputDate(data.transaction.date);
 				
 				setFormData({
 					description: data.transaction.description,
@@ -64,7 +64,7 @@ const TransactionPage = () => {
 						category: formData.category,
 						amount: parseFloat(formData.amount),
 						location: formData.location,
-						date: formData.date,
+						date: formatGraphQLDate(formData.date), // Use GraphQL date format
 					}
 				}
 			});

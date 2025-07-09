@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_TRANSACTION } from '../graphql/mutations/transaction.mutation';
-import { GET_TRANSACTIONS } from '../graphql/queries/transaction.query';
+import { CREATE_TRANSACTION } from '../graphql/mutations/transaction.mutation.ts';
+import { GET_TRANSACTIONS } from '../graphql/queries/transaction.query.ts';
+import { getTodayInputDate, formatGraphQLDate } from '../utils/dateUtils';
 import toast from 'react-hot-toast';
 
 const TransactionForm = () => {
@@ -11,7 +12,7 @@ const TransactionForm = () => {
     category: '',
     location: '',
     paymentType: '',
-    date: '',
+    date: getTodayInputDate(), // Set today as default
   });
 
   const [createTransaction, { loading, error }] = useMutation(CREATE_TRANSACTION, {
@@ -24,7 +25,7 @@ const TransactionForm = () => {
         category: '',
         location: '',
         paymentType: '',
-        date: '',
+        date: getTodayInputDate(), // Reset to today
       });
       toast.success('Transaction added successfully!');
     },
@@ -50,20 +51,25 @@ const TransactionForm = () => {
       return;
     }
 
-    const input = {
-      description: formData.description,
-      amount: parseFloat(formData.amount),
-      category: formData.category, // Keep original capitalization
-      location: formData.location || 'Unknown',
-      paymentType: formData.paymentType,
-      date: formData.date,
-    };
+    try {
+      const input = {
+        description: formData.description,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        location: formData.location || 'Unknown',
+        paymentType: formData.paymentType,
+        date: formatGraphQLDate(formData.date), // Properly format date for GraphQL
+      };
 
-    console.log('Sending mutation with input:', input);
+      console.log('Sending mutation with input:', input);
 
-    createTransaction({
-      variables: { input },
-    });
+      createTransaction({
+        variables: { input },
+      });
+    } catch (error) {
+      toast.error('Invalid date format');
+      console.error('Date formatting error:', error);
+    }
   };
 
   return (

@@ -34,10 +34,10 @@ export const GET_TRANSACTION = gql`
 `;
 
 export const GET_TRANSACTION_STATISTICS = gql`
-	query GetTransactionStatistics {
-		categoryStatistics {
-			category
-			totalAmount
-		}
-	}
+  query GetTransactionStatistics($startDate: String, $endDate: String) {
+    categoryStatistics(startDate: $startDate, endDate: $endDate) {
+      category
+      totalAmount
+    }
+  }
 `;

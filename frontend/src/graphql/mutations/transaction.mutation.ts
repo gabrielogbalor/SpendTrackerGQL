@@ -39,4 +39,4 @@ export const DELETE_TRANSACTION = gql`
 			date
 		}
 	}
-`;
+`; 
