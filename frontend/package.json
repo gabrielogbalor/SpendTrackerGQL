@@ -15,7 +15,7 @@
     "@types/node": "^22.15.30",
     "chart.js": "^4.4.9",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.15.0",
+    "framer-motion": "^12.23.1",
     "graphql": "^16.11.0",
     "mini-svg-data-uri": "^1.4.4",
     "react": "^19.1.0",

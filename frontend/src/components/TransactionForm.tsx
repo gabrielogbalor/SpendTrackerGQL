@@ -1,11 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_TRANSACTION } from '../graphql/mutations/transaction.mutation.ts';
 import { GET_TRANSACTIONS } from '../graphql/queries/transaction.query.ts';
 import { getTodayInputDate, formatGraphQLDate } from '../utils/dateUtils';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
-const TransactionForm = () => {
+interface TransactionFormProps {
+  initialData?: {
+    description?: string;
+    amount?: number;
+    category?: string;
+    location?: string;
+    paymentType?: string;
+    date?: string;
+  };
+  onDataFilled?: () => void;
+}
+
+const TransactionForm = ({ initialData, onDataFilled }: TransactionFormProps) => {
+  const formRef = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -14,6 +28,37 @@ const TransactionForm = () => {
     paymentType: '',
     date: getTodayInputDate(), // Set today as default
   });
+
+  // Effect to populate form when initialData is provided
+  useEffect(() => {
+    if (initialData) {
+      console.log('TransactionForm received initialData:', initialData);
+      setFormData({
+        description: initialData.description || '',
+        amount: initialData.amount ? initialData.amount.toString() : '',
+        category: initialData.category || '',
+        location: initialData.location || '',
+        paymentType: initialData.paymentType || '',
+        date: initialData.date || getTodayInputDate(),
+      });
+      
+      // Call callback to notify that data has been filled
+      if (onDataFilled) {
+        onDataFilled();
+      }
+      
+      // Show toast notification and scroll to form
+      toast.success('🤖 AI parsed your transaction! Review and submit below.');
+      
+      // Scroll to form after a short delay to ensure it's rendered
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+    }
+  }, [initialData, onDataFilled]);
 
   const [createTransaction, { loading, error }] = useMutation(CREATE_TRANSACTION, {
     refetchQueries: [{ query: GET_TRANSACTIONS }],
@@ -73,26 +118,63 @@ const TransactionForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow mb-6">
-      <h3 className="text-lg font-semibold mb-4">Add New Transaction</h3>
+    <motion.form 
+      ref={formRef} 
+      onSubmit={handleSubmit} 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25 }}
+      className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-slate-800">
+          {initialData ? '🤖 AI Parsed Transaction - Review & Submit' : '📝 Add New Transaction'}
+        </h3>
+        {initialData && (
+          <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full font-medium shadow-md"
+          >
+            AI Generated
+          </motion.span>
+        )}
+      </div>
       
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          Error: {error.message}
-        </div>
+      {initialData && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 text-blue-800 px-5 py-4 rounded-xl mb-6 backdrop-blur-sm"
+        >
+          <p className="text-sm">
+            <strong>✨ AI filled this form for you!</strong> Please review the details below and click "Add Transaction" to save.
+          </p>
+        </motion.div>
       )}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <input 
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/50 text-red-700 px-5 py-4 rounded-xl mb-6 backdrop-blur-sm"
+        >
+          Error: {error.message}
+        </motion.div>
+      )}
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <motion.input 
           name="description" 
           value={formData.description} 
           onChange={handleChange} 
           placeholder="Description *" 
-          className="border p-2 rounded"
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
           required
+          whileFocus={{ scale: 1.02 }}
         />
         
-        <input 
+        <motion.input 
           name="amount" 
           value={formData.amount} 
           onChange={handleChange} 
@@ -100,61 +182,68 @@ const TransactionForm = () => {
           type="number" 
           step="0.01"
           min="0"
-          className="border p-2 rounded"
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
           required
+          whileFocus={{ scale: 1.02 }}
         />
         
-        <select 
+        <motion.select 
           name="category" 
           value={formData.category} 
           onChange={handleChange} 
-          className="border p-2 rounded"
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
           required
+          whileFocus={{ scale: 1.02 }}
         >
           <option value="">Select Category *</option>
-          <option value="Food">Food</option>
-          <option value="Entertainment">Entertainment</option>
-          <option value="Utilities">Utilities</option>
-        </select>
+          <option value="Food">🍽️ Food</option>
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Utilities">⚡ Utilities</option>
+        </motion.select>
         
-        <input 
+        <motion.input 
           name="location" 
           value={formData.location} 
           onChange={handleChange} 
           placeholder="Location" 
-          className="border p-2 rounded" 
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
+          whileFocus={{ scale: 1.02 }}
         />
         
-        <select 
+        <motion.select 
           name="paymentType" 
           value={formData.paymentType} 
           onChange={handleChange} 
-          className="border p-2 rounded"
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
           required
+          whileFocus={{ scale: 1.02 }}
         >
           <option value="">Payment Type *</option>
-          <option value="Cash">Cash</option>
-          <option value="Card">Card</option>
-        </select>
+          <option value="Cash">💵 Cash</option>
+          <option value="Card">💳 Card</option>
+        </motion.select>
         
-        <input 
+        <motion.input 
           name="date" 
           value={formData.date} 
           onChange={handleChange} 
           type="date" 
-          className="border p-2 rounded"
+          className="border-2 border-slate-200 p-3 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white/50 backdrop-blur-sm font-medium"
           required
+          whileFocus={{ scale: 1.02 }}
         />
       </div>
       
-      <button 
+      <motion.button 
         type="submit" 
-        className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-slate-900 disabled:opacity-50 transition-all font-medium shadow-lg"
         disabled={loading}
       >
         {loading ? 'Adding...' : 'Add Transaction'}
-      </button>
-    </form>
+      </motion.button>
+    </motion.form>
   );
 };
 

@@ -6,24 +6,29 @@ const SidebarLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
 
   const navItems = [
-    { label: 'Dashboard', path: '/' },
-    { label: 'Transactions', path: '/transactions' },
-    { label: 'Budgets', path: '/budgets' },
-    { label: 'Analytics', path: '/analytics' },
-    { label: 'Settings', path: '/settings' }
+    { label: '🌱 AI Entry', path: '/' },
+    { label: '🏠 Dashboard', path: '/dashboard' },
+    { label: '🌳 Transactions', path: '/transactions' },
+    { label: '💰 Budgets', path: '/budgets' },
+    { label: '📊 Analytics', path: '/analytics' },
+    { label: '⚙️ Settings', path: '/settings' }
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <aside className="w-64 bg-gray-900 text-white p-4 space-y-6">
-        <div className="text-xl font-bold">SpendTracker</div>
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <aside className="w-64 bg-gradient-to-b from-slate-900 to-blue-900 text-white p-4 space-y-6 shadow-xl">
+        <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          SpendTracker AI
+        </div>
         <nav className="space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`block px-3 py-2 rounded hover:bg-gray-700 ${
-                location.pathname === item.path ? 'bg-gray-800' : ''
+              className={`block px-4 py-3 rounded-lg transition-all duration-200 hover:bg-white/10 hover:scale-105 ${
+                location.pathname === item.path 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg' 
+                  : 'hover:shadow-md'
               }`}
             >
               {item.label}
@@ -31,7 +36,7 @@ const SidebarLayout = ({ children }: { children: ReactNode }) => {
           ))}
         </nav>
       </aside>
-      <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 };

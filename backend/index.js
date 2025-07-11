@@ -18,6 +18,7 @@ import mergedTypeDefs from "./typeDefs/index.js";
 
 import {connectDB} from "./db/connectDB.js"
 import { configurePassport } from "./passport/passport.config.js";
+import aiTransactionRoutes from './routes/ai-transactions.js';
 
 dotenv.config();
 configurePassport();
@@ -50,6 +51,15 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Add JSON middleware for API routes
+app.use(express.json());
+
+// Add AI transaction routes
+app.use('/api/ai', cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+}), aiTransactionRoutes);
 
 const server = new ApolloServer({
   typeDefs: mergedTypeDefs,
